@@ -1,7 +1,10 @@
 import React from "react";
+import "./components/TodoComponents/Todo.css";
 import TodoList from "./components/TodoComponents/TodoList";
 import TodoForm from "./components/TodoComponents/TodoForm";
+import { localStorage } from "local-storage";
 
+// const todo_list = JSON.parse(localStorage.getItem("todo_list")).todos || [];
 export default class App extends React.Component {
   // you will need a place to store your state in this component.
   // design `App` to be the parent component of your application.
@@ -9,42 +12,57 @@ export default class App extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
+      // search: "",
       todo: "",
-      todos: [],
-      completed: []
+      todos: []
     };
   }
+  // persistState = (key, value) => {
+  //   localStorage.setItem(key, value);
+  // };
   toggleComplete = id => {
     return event => {
       this.setState(currentState => ({
         todos: currentState.todos.map(todo => {
           if (todo.id !== id) return todo;
           return { ...todo, completed: !todo.completed };
-        }),
-        completed: [...currentState.todos, id]
+        })
+
+        // this.persistState("todo_list", JSON.stringify(state));
+        // return state;
       }));
     };
   };
   removeTodos = () => {
     this.setState(currentState => ({
-      todos: currentState.todos.filter(todo =>
-        currentState.completed.includes(todo.id)
-      ),
-      completed: []
+      todos: currentState.todos.filter(todo => !todo.completed)
     }));
+    // this.persistState("todo_list", JSON.stringify(state));
+    // return state;
   };
-  addTodo = () => {
-    this.setState(currentState => ({
-      todos: [
-        ...currentState.todos,
-        {
-          id: Date.now(),
-          task: currentState.todo,
-          completed: false
-        }
-      ],
-      todo: ""
-    }));
+  addTodo = e => {
+    e.preventDefault();
+    this.setState(currentState => {
+      if (!currentState.todo) return false;
+      return {
+        todos: [
+          ...currentState.todos,
+          {
+            id: Date.now(),
+            task: currentState.todo,
+            completed: false
+          }
+        ],
+        todo: ""
+      };
+      // this.persistState("todo_list", JSON.stringify(state));
+      // return { ...state, todo: "" };
+    });
+  };
+  searchOnChange = e => {
+    this.setState({
+      search: e.target.value
+    });
   };
   todoOnChange = e => {
     this.setState({
@@ -52,14 +70,15 @@ export default class App extends React.Component {
     });
   };
   render() {
+    const { todos, todo, search } = this.state;
+    const searchedTodos = search
+      ? todos.filter(_todo => _todo.task.includes(search))
+      : todos;
     return (
       <>
-        <TodoList
-          data={this.state.todos}
-          toggleComplete={this.toggleComplete}
-        />
+        <TodoList data={searchedTodos} toggleComplete={this.toggleComplete} />
         <TodoForm
-          todo={this.state.todo}
+          todo={todo}
           todoOnChange={this.todoOnChange}
           addTodo={this.addTodo}
           removeTodos={this.removeTodos}
